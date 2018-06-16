@@ -53,14 +53,24 @@ else
 	external_iface=$wlan
 fi
 
-# Delete output device default route
-/sbin/ip route del 0/0 dev $internal_iface 2> /dev/null
-/sbin/ip route del default dev $internal_iface 2> /dev/null
+# See which device was detected at last run
+touch /tmp/share_iface.dat
+current_external_iface=`cat /tmp/share_iface.dat`
 
-# Set up dnsmasq
-/bin/systemctl stop dnsmasq
-rm -rf /etc/dnsmasq.d/*
-echo -e "interface=$internal_iface\n\
+if [ "$external_iface" == "$current_external_iface" ]; then
+	# Device is unchanged, do nothing
+
+else
+	# Device has changed since last run
+
+	# Delete output device default route
+	/sbin/ip route del 0/0 dev $internal_iface 2> /dev/null
+	/sbin/ip route del default dev $internal_iface 2> /dev/null
+
+	# Set up dnsmasq
+	/bin/systemctl stop dnsmasq
+	rm -rf /etc/dnsmasq.d/*
+	echo -e "interface=$internal_iface\n\
 bind-interfaces\n\
 server=8.8.8.8\n\
 domain-needed\n\
@@ -68,21 +78,25 @@ bogus-priv\n\
 dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
 /bin/systemctl start dnsmasq
 
-# Flush iptables
-/sbin/iptables -F
-/sbin/iptables -t nat -F
-/sbin/iptables -t mangle -F
+	# Flush iptables
+	/sbin/iptables -F
+	/sbin/iptables -t nat -F
+	/sbin/iptables -t mangle -F
 
-# Set up new iptables
-/sbin/iptables -t nat -A POSTROUTING -o $external_iface -j MASQUERADE
-/sbin/iptables -A FORWARD -i $external_iface -o $internal_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
-/sbin/iptables -A FORWARD -i $internal_iface -o $external_iface -j ACCEPT
+	# Set up new iptables
+	/sbin/iptables -t nat -A POSTROUTING -o $external_iface -j MASQUERADE
+	/sbin/iptables -A FORWARD -i $external_iface -o $internal_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
+	/sbin/iptables -A FORWARD -i $internal_iface -o $external_iface -j ACCEPT
 
-# Get external IP
-external_ip=`ip addr show $external_iface | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
+	# Get external IP
+	external_ip=`ip addr show $external_iface | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
 
-if [ ! -z $external_ip ]; then
-	# if $external_ip is not empty, then...
-	# Make sure we can SSH out even if an OpenVPN session fires up
-	route add 45.33.72.223 gw $external_ip metric 5 2> /dev/null
+	if [ ! -z $external_ip ]; then
+		# if $external_ip is not empty, then...
+		# Make sure we can SSH out even if an OpenVPN session fires up
+		route add 45.33.72.223 gw $external_ip metric 5 2> /dev/null
+	fi
 fi
+
+# Save external interface selection to disk
+echo $external_iface > /tmp/share_iface.dat
