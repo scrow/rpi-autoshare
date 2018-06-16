@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Automatically shares available external network connection over specified $internal_iface
+#
+# To install packages needed for iOS and Android support:
+# apt-get update; apt-get install gvfs ipheth-utils
+# apt-get install libimobiledevice-utils gvfs-backends gvfs-bin gvfs-fuse
+#
+# To connect to an iOS device, enable the hotspot on the device before connecting to USB
+
 # This function from https://unix.stackexchange.com/a/28457
 # Check if we are root and re-execute if we are not.
 rootcheck () {
