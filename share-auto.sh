@@ -8,8 +8,8 @@
 #
 # To connect to an iOS device, enable the hotspot on the device before connecting to USB
 
-# This function from https://unix.stackexchange.com/a/28457
 # Check if we are root and re-execute if we are not.
+# This function from https://unix.stackexchange.com/a/28457
 rootcheck () {
     if [ $(id -u) != "0" ]
     then
