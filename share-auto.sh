@@ -37,19 +37,15 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 
 if [ -d /sys/class/net/$tun ]; then
 	# OpenVPN is up, so share that
-	echo Sharing $tun...
 	external_iface=$tun
 elif [ -d /sys/class/net/$eth ]; then
 	# iPhone exists, use it
-	echo Sharing $eth...
 	external_iface=$eth
 elif [ -d /sys/class/net/$usb ]; then
 	# Android exists, use it
-	echo Sharing $usb...
 	external_iface=$usb
 else
 	# Use wlan
-	echo Sharing $wlan...
 	external_iface=$wlan
 fi
 
@@ -59,9 +55,11 @@ current_external_iface=`cat /tmp/share_iface.dat`
 
 if [ "$external_iface" == "$current_external_iface" ]; then
 	# Device is unchanged, do nothing
-
+	echo No change detected since last run.
 else
 	# Device has changed since last run
+
+	echo Sharing $external_iface
 
 	# Delete output device default route
 	/sbin/ip route del 0/0 dev $internal_iface 2> /dev/null
