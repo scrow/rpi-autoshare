@@ -18,8 +18,57 @@ rootcheck () {
     fi
 }
 
+setup_default_route () {
+	# Get external IP
+	external_ip=`ip addr show $external_iface | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
+
+	if [ ! -z $external_ip ]; then
+		# if $external_ip is not empty, then...
+		# Make sure we can SSH out even if an OpenVPN session fires up
+		route add 45.33.72.223 gw $external_ip metric 5 2> /dev/null
+	fi
+
+	# Save external IP to disk
+	echo $external_ip > /tmp/share_ip.dat
+}
+
+# Set up the forwarding, firewall, and routing tables
+setup_sharing () {
+	# Delete output device default route
+	/sbin/ip route del 0/0 dev $internal_iface 2> /dev/null
+	/sbin/ip route del default dev $internal_iface 2> /dev/null
+
+	# Set up dnsmasq
+	/bin/systemctl stop dnsmasq
+	rm -rf /etc/dnsmasq.d/*
+	echo -e "interface=$internal_iface\n\
+bind-interfaces\n\
+server=8.8.8.8\n\
+domain-needed\n\
+bogus-priv\n\
+dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
+/bin/systemctl start dnsmasq
+
+	# Flush iptables
+	/sbin/iptables -F
+	/sbin/iptables -t nat -F
+	/sbin/iptables -t mangle -F
+
+	# Set up new iptables
+	/sbin/iptables -t nat -A POSTROUTING -o $external_iface -j MASQUERADE
+	/sbin/iptables -A FORWARD -i $external_iface -o $internal_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
+	/sbin/iptables -A FORWARD -i $internal_iface -o $external_iface -j ACCEPT
+
+	setup_default_route
+}
+
 rootcheck
 
+# Configure these to reflect your device names.  The default configuration is to
+# forward traffic from a wireless or USB device to the wired network port, identified
+# as $internal_interface.  If you want to go the other way, and share a wired or USB
+# device out of a `hostapd` wireless hotspot on wlan0, just flip-flop the internal
+# and wlan interfaces here.
 internal_iface="enxb827eb9a9898"
 tun="tun0"
 usb="usb0"
@@ -61,40 +110,18 @@ else
 
 	echo Sharing $external_iface
 
-	# Delete output device default route
-	/sbin/ip route del 0/0 dev $internal_iface 2> /dev/null
-	/sbin/ip route del default dev $internal_iface 2> /dev/null
-
-	# Set up dnsmasq
-	/bin/systemctl stop dnsmasq
-	rm -rf /etc/dnsmasq.d/*
-	echo -e "interface=$internal_iface\n\
-bind-interfaces\n\
-server=8.8.8.8\n\
-domain-needed\n\
-bogus-priv\n\
-dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
-/bin/systemctl start dnsmasq
-
-	# Flush iptables
-	/sbin/iptables -F
-	/sbin/iptables -t nat -F
-	/sbin/iptables -t mangle -F
-
-	# Set up new iptables
-	/sbin/iptables -t nat -A POSTROUTING -o $external_iface -j MASQUERADE
-	/sbin/iptables -A FORWARD -i $external_iface -o $internal_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
-	/sbin/iptables -A FORWARD -i $internal_iface -o $external_iface -j ACCEPT
-
-	# Get external IP
-	external_ip=`ip addr show $external_iface | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
-
-	if [ ! -z $external_ip ]; then
-		# if $external_ip is not empty, then...
-		# Make sure we can SSH out even if an OpenVPN session fires up
-		route add 45.33.72.223 gw $external_ip metric 5 2> /dev/null
-	fi
+	setup_sharing
 fi
 
 # Save external interface selection to disk
 echo $external_iface > /tmp/share_iface.dat
+
+# See if external IP has changed since last run, and if so, re-do the default route
+# This should help allevate lengthy connection stalls or lockups if the external
+# interface IP address changes.  I think this will also address some captive portal
+# issues when sharing a public hotspot connection (hotel WiFi, etc) but need to test.
+# Get external IP
+external_ip=`ip addr show $external_iface | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
+if [ $external_ip == `cat /tmp/share_ip.dat` ]; then
+	setup_default_route
+fi
