@@ -122,6 +122,6 @@ echo $external_iface > /tmp/share_iface.dat
 # issues when sharing a public hotspot connection (hotel WiFi, etc) but need to test.
 # Get external IP
 external_ip=`ip addr show $external_iface | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
-if [ $external_ip == `cat /tmp/share_ip.dat` ]; then
+if [ "$external_ip" == "`cat /tmp/share_ip.dat`" ]; then
 	setup_default_route
 fi
