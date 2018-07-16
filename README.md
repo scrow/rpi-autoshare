@@ -1,4 +1,4 @@
-# github.com/scrow/rpi-autoshare
+# scrow/rpi-autoshare
 
 This tool automatically shares an available external network connection over the specified interface.  It is intended to automatically share a Wi-Fi connection, or a tethered iPhone or Android hotspot connection, over the wired Ethernet jack on a Raspberry Pi.  It's written specifically for the RPi 3, but may work on other models.
 
@@ -6,7 +6,7 @@ This script also supports sharing of an OpenVPN tunnel, which would route all tr
 
 ## Prerequisites
 
-To share an iPhone device, you'll need to install a few packages:
+To share an iPhone device, you'll need to install a few packages.  Assuming Raspbian Stretch:
 
     sudo apt-get update
     sudo apt-get install gvfs ipheth-utils
