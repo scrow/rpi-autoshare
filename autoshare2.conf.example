@@ -1,0 +1,27 @@
+# Configuration file for scrow/rpi-autoshare
+
+# Define the interfaces
+# Generally, the internal interface should be the name of your RPi's built-in ethernet port
+# and other lines should be as-is.  However, if you want to run this script in reverse and
+# share a wired Ethernet connection out of the built-in wireless interface, simply flip-flop
+# the interface names between internal_interface and wlan below.
+internal_iface="enxb827eb9a9898"
+tun="tun0"
+usb="usb0"
+wlan="wlan0"
+eth="eth0"
+
+# Toggle establishment of default gateway on the specified $internal_iface
+# Set this to "1" if you are sharing connections out of the RPi's built-in Ethernet jack
+# Otherwise set this to "0"
+# If you have issues with traffic not being forwarded run 'sudo route -n' and look for a
+# duplicate default gateway specification.  Remove the extra one and set this to "1" and
+# see if it resolves the issue.
+disable_internal_iface_gw=1
+
+# Configure the DHCP server
+internal_ip="192.168.253.1"
+internal_netmask="255.255.255.0"
+dhcp_range_start="192.168.253.2"
+dhcp_range_end="192.168.253.253"
+dhcp_time="12h"
