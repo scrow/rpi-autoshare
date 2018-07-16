@@ -1,4 +1,6 @@
 #!/bin/bash
+PWD=`pwd`
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 # Automatically shares available external network connection over specified $internal_iface
 #
@@ -8,24 +10,29 @@
 #
 # To connect to an iOS device, enable the hotspot on the device before connecting to USB
 
-if [ -f autoshare2.conf ]; then
-	source autoshare2.conf
-else
-	echo "Configuration file autoshare2.conf not found."
-	exit 1
-fi
-
 # Check if we are root and re-execute if we are not.
 # This function from https://unix.stackexchange.com/a/28457
 rootcheck () {
     if [ $(id -u) != "0" ]
     then
         sudo "$0" "$@"
+	cd "$PWD"
         exit $?
     fi
 }
 
 rootcheck
+
+cd "$DIR"
+
+# Read in the configuration file
+if [ -f autoshare2.conf ]; then
+	source autoshare2.conf
+else
+	echo "Configuration file autoshare2.conf not found."
+	cd "$PWD"
+	exit 1
+fi
 
 # Set up the forwarding, firewall, and routing tables
 setup_sharing () {
@@ -100,3 +107,4 @@ fi
 # Save external interface selection to disk
 echo $external_iface > /tmp/share_iface.dat
 
+cd "$PWD"
