@@ -8,23 +8,12 @@
 #
 # To connect to an iOS device, enable the hotspot on the device before connecting to USB
 
-# Define the interfaces
-# Generally, the internal interface should be the name of your RPi's built-in ethernet port
-# and other lines should be as-is.  However, if you want to run this script in reverse and
-# share a wired Ethernet connection out of the built-in wireless interface, simply flip-flop
-# the interface names between internal_interface and wlan below.
-internal_iface="enxb827eb9a9898"
-tun="tun0"
-usb="usb0"
-wlan="wlan0"
-eth="eth0"
-
-# Configure the DHCP server
-internal_ip="192.168.253.1"
-internal_netmask="255.255.255.0"
-dhcp_range_start="192.168.253.2"
-dhcp_range_end="192.168.253.253"
-dhcp_time="12h"
+if [ -f autoshare2.conf ]; then
+	source autoshare2.conf
+else
+	echo "Configuration file autoshare2.conf not found."
+	exit 1
+fi
 
 # Check if we are root and re-execute if we are not.
 # This function from https://unix.stackexchange.com/a/28457
@@ -44,26 +33,23 @@ setup_sharing () {
 	/bin/systemctl stop dnsmasq
 	rm -rf /etc/dnsmasq.d/*
 
-	# Enable ONE of the two following blocks of code.
-	# The first one should be used if you're sharing out of the built-in Ethernet jack,
-	# and prevents the system from using it as the default gateway (dhcp-option=wireless-net,3)
-	# 
-	# The second one shoudl be used in all other configurations (omits the dhcp-option line)
-	echo -e "interface=$internal_iface\n\
+	if [ $disable_internal_iface_gw == 1 ]; then
+		echo -e "interface=$internal_iface\n\
 bind-interfaces\n\
 server=8.8.8.8\n\
 domain-needed\n\
 bogus-priv\n\
 dhcp-option=wireless-net,3\n\
 dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
-
-#	echo -e "interface=$internal_iface\n\
-#bind-interfaces\n\
-#server=8.8.8.8\n\
-#domain-needed\n\
-#bogus-priv\n\
-#dhcp-option=wireless-net,3\n\
-#dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
+	else
+		echo -e "interface=$internal_iface\n\
+bind-interfaces\n\
+server=8.8.8.8\n\
+domain-needed\n\
+bogus-priv\n\
+dhcp-option=wireless-net,3\n\
+dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
+	fi
 
 	# Restart dnsmasq with the new configuration
 	/bin/systemctl start dnsmasq
