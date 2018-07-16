@@ -12,12 +12,12 @@ wlan="wlan0"
 eth="eth0"
 
 # Toggle establishment of default gateway on the specified $internal_iface
-# Set this to "1" if you are sharing connections out of the RPi's built-in Ethernet jack
-# Otherwise set this to "0"
+# Set this to true if you are sharing connections out of the RPi's built-in Ethernet jack
+# Otherwise set this to false
 # If you have issues with traffic not being forwarded run 'sudo route -n' and look for a
-# duplicate default gateway specification.  Remove the extra one and set this to "1" and
+# duplicate default gateway specification.  Remove the extra one and set this to true and
 # see if it resolves the issue.
-disable_internal_iface_gw=1
+disable_internal_iface_gw=true
 
 # Configure the DHCP server
 internal_ip="192.168.253.1"

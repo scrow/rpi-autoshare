@@ -40,7 +40,7 @@ setup_sharing () {
 	/bin/systemctl stop dnsmasq
 	rm -rf /etc/dnsmasq.d/*
 
-	if [ $disable_internal_iface_gw == 1 ]; then
+	if [ "$disable_internal_iface_gw" = true ]; then
 		echo -e "interface=$internal_iface\n\
 bind-interfaces\n\
 server=8.8.8.8\n\
