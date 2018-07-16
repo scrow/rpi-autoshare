@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# 
+# github.com/scrow/rpi-autoshare
+# Connection-sharing tool for the Raspberry Pi
+# scrow@sdf.org
+# 
+
 # Forces a restart of the autoshare2.sh script
 
 # Check if we are root and re-execute if we are not.

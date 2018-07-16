@@ -1,3 +1,9 @@
+# 
+# github.com/scrow/rpi-autoshare
+# Connection-sharing tool for the Raspberry Pi
+# scrow@sdf.org
+# 
+
 # Configuration file for scrow/rpi-autoshare
 
 # Define the interfaces
