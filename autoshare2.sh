@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 
-# github.com/scrow/rpi-autoshare
+# scrow/rpi-autoshare
 # Connection-sharing tool for the Raspberry Pi
 # scrow@sdf.org
 # 
