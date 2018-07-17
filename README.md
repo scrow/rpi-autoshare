@@ -28,6 +28,12 @@ To fully automate connection sharing, this script should be run from a cron job.
     * * * * *  sleep 30; /path/to/rpi-autoshare/autoshare2.sh > /dev/null 2>&1
     * * * * *  sleep 45; /path/to/rpi-autoshare/autoshare2.sh > /dev/null 2>&1
 
+## Customization
+
+As of v2.1, an additional script can be called before and after setting up the sharing, when a change to the active interface is detected.  These files should be called `autoshare-prerun.sh` and `autoshare-postrun.sh`.  The postrun script is particularly helpful if you want/need to specify additional iptables rules, since the tables are completely flushed by this script when the interface changes.
+
+Note that the `$internal_iface` and `$external_iface` variables are visible to the prerun/postrun scripts, should you wish to use those in those scripts for any additional interface configuration or iptables rules.
+
 ## Bug Reports
 
 Bug reports can be submitted through the issue tracker on Github or via e-mail to the author at <mailto:scrow@sdf.org>.

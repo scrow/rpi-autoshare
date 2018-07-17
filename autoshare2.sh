@@ -35,6 +35,11 @@ fi
 
 # Set up the forwarding, firewall, and routing tables
 setup_sharing () {
+	# Execute prerun script, if any
+	if [ -f autoshare-prerun.sh ]; then
+		source autoshare-prerun.sh
+	fi
+
 	# Set up dnsmasq
 	/bin/systemctl stop dnsmasq
 	rm -f /etc/dnsmasq.d/custom-dnsmasq.conf > /dev/null 2&>1
@@ -69,6 +74,11 @@ dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom
 	/sbin/iptables -t nat -A POSTROUTING -o $external_iface -j MASQUERADE
 	/sbin/iptables -A FORWARD -i $external_iface -o $internal_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
 	/sbin/iptables -A FORWARD -i $internal_iface -o $external_iface -j ACCEPT
+
+	# Execute postrun script, if any
+	if [ -f autoshare-postrun.sh ]; then
+		source autoshare-postrun.sh
+	fi
 }
 
 # Enable v4 packet forwarding
