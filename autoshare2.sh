@@ -42,7 +42,7 @@ setup_sharing () {
 
 	# Set up dnsmasq
 	/bin/systemctl stop dnsmasq
-	rm -f /etc/dnsmasq.d/custom-dnsmasq.conf > /dev/null 2&>1
+	rm -f /etc/dnsmasq.d/custom-dnsmasq.conf > /dev/null 2>&1
 
 	if [ "$disable_internal_iface_gw" = true ]; then
 		echo -e "interface=$internal_iface\n\
