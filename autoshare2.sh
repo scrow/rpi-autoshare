@@ -34,86 +34,45 @@ else
 fi
 
 # Set up the forwarding, firewall, and routing tables
-setup_sharing () {
-	# Execute prerun script, if any
-	if [ -f autoshare-prerun.sh ]; then
-		source autoshare-prerun.sh
-	fi
+# Set up dnsmasq
+/bin/systemctl stop dnsmasq
+rm -f /etc/dnsmasq.d/custom-dnsmasq.conf > /dev/null 2>&1
 
-	# Set up dnsmasq
-	/bin/systemctl stop dnsmasq
-	rm -f /etc/dnsmasq.d/custom-dnsmasq.conf > /dev/null 2>&1
-
-	if [ "$disable_internal_iface_gw" = true ]; then
-		echo -e "interface=$internal_iface\n\
+if [ "$disable_internal_iface_gw" = true ]; then
+	echo -e "interface=$internal_iface\n\
 bind-interfaces\n\
 server=8.8.8.8\n\
 domain-needed\n\
 bogus-priv\n\
 dhcp-option=wireless-net,3\n\
 dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
-	else
-		echo -e "interface=$internal_iface\n\
+else
+	echo -e "interface=$internal_iface\n\
 bind-interfaces\n\
 server=8.8.8.8\n\
 domain-needed\n\
 bogus-priv\n\
 dhcp-option=wireless-net,3\n\
 dhcp-range=$dhcp_range_start,$dhcp_range_end,$dhcp_time" > /etc/dnsmasq.d/custom-dnsmasq.conf
-	fi
+fi
 
-	# Restart dnsmasq with the new configuration
-	/bin/systemctl start dnsmasq
+# Restart dnsmasq with the new configuration
+/bin/systemctl start dnsmasq
 
-	# Flush iptables
-	/sbin/iptables -F
-	/sbin/iptables -t nat -F
-	/sbin/iptables -t mangle -F
+# Flush iptables
+/sbin/iptables -F
+/sbin/iptables -t nat -F
+/sbin/iptables -t mangle -F
 
+for this_iface in "${external_iface_list[@]}"
+do
 	# Set up new iptables
-	/sbin/iptables -t nat -A POSTROUTING -o $external_iface -j MASQUERADE
-	/sbin/iptables -A FORWARD -i $external_iface -o $internal_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
-	/sbin/iptables -A FORWARD -i $internal_iface -o $external_iface -j ACCEPT
-
-	# Execute postrun script, if any
-	if [ -f autoshare-postrun.sh ]; then
-		source autoshare-postrun.sh
-	fi
-}
+	/sbin/iptables -t nat -A POSTROUTING -o "$this_iface" -j MASQUERADE
+	/sbin/iptables -A FORWARD -i "$this_iface" -o "$internal_iface" -m state --state RELATED,ESTABLISHED -j ACCEPT
+	/sbin/iptables -A FORWARD -i "$internal_iface" -o "$this_iface" -j ACCEPT
+done
 
 # Enable v4 packet forwarding
 echo 1 > /proc/sys/net/ipv4/ip_forward
-
-if [ -d /sys/class/net/$tun ]; then
-	# OpenVPN is up, so share that
-	external_iface=$tun
-elif [ -d /sys/class/net/$eth ]; then
-	# iPhone exists, use it
-	external_iface=$eth
-elif [ -d /sys/class/net/$usb ]; then
-	# Android exists, use it
-	external_iface=$usb
-else
-	# Use wlan
-	external_iface=$wlan
-fi
-
-# See which device was detected at last run
-touch /tmp/share_iface.dat
-current_external_iface=`cat /tmp/share_iface.dat`
-
-if [ "$external_iface" == "$current_external_iface" ]; then
-	# Device is unchanged, do nothing
-	echo No change detected since last run.
-else
-	# Device has changed since last run
-
-	echo Sharing $external_iface
-
-	setup_sharing
-fi
-
-# Save external interface selection to disk
-echo $external_iface > /tmp/share_iface.dat
 
 cd "$PWD"

@@ -20,19 +20,9 @@ To install, download or clone this repository to any location on your system whi
 
 ## Execution
 
-To fully automate connection sharing, this script should be run from a cron job.  The script produces one file in `/tmp` which will need to be removed at boot to ensure the connection is set back up correctly.  Recommended crontab entries:
+As of v2.1, forwarding is configured across all interfaces defined in the `external_iface_list` variable inside `autoshare2.conf`.  There is no longer any need to repeatedly call this script, and it no longer checks to see which interfaces are active.  A one-shot execution at bootup should be sufficient.  In crontab:
 
-    @reboot    /path/to/rpi-autoshare/autoshare-reset.sh
-    * * * * *  sleep 00; /path/to/rpi-autoshare/autoshare2.sh > /dev/null 2>&1
-    * * * * *  sleep 15; /path/to/rpi-autoshare/autoshare2.sh > /dev/null 2>&1
-    * * * * *  sleep 30; /path/to/rpi-autoshare/autoshare2.sh > /dev/null 2>&1
-    * * * * *  sleep 45; /path/to/rpi-autoshare/autoshare2.sh > /dev/null 2>&1
-
-## Customization
-
-As of v2.1, an additional script can be called before and after setting up the sharing, when a change to the active interface is detected.  These files should be called `autoshare-prerun.sh` and `autoshare-postrun.sh`.  The postrun script is particularly helpful if you want/need to specify additional iptables rules, since the tables are completely flushed by this script when the interface changes.
-
-Note that the `$external_iface` variable as well as the variables defined in `autoshare2.conf` are all visible to the prerun/postrun scripts, should you wish to use those in those scripts for any additional interface configuration or iptables rules.
+    @reboot    /path/to/rpi-autoshare/autoshare2.sh
 
 ## Bug Reports
 

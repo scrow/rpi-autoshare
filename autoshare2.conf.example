@@ -8,14 +8,11 @@
 
 # Define the interfaces
 # Generally, the internal interface should be the name of your RPi's built-in ethernet port
-# and other lines should be as-is.  However, if you want to run this script in reverse and
+# and external_iface_list should be as-is.  However, if you want to run this script in reverse and
 # share a wired Ethernet connection out of the built-in wireless interface, simply flip-flop
 # the interface names between internal_interface and wlan below.
 internal_iface="enxb827eb9a9898"
-tun="tun0"
-usb="usb0"
-wlan="wlan0"
-eth="eth0"
+declare -a external_iface_list=("tun0" "usb0" "wlan0" "eth0")
 
 # Toggle establishment of default gateway on the specified $internal_iface
 # Set this to true if you are sharing connections out of the RPi's built-in Ethernet jack
