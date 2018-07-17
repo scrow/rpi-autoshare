@@ -5,5 +5,5 @@
 # 
 
 autoshare2.conf
-autoshare-post.sh
-autoshare-pre.sh
+autoshare-postrun.sh
+autoshare-prerun.sh
